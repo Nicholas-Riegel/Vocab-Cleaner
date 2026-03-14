@@ -1,0 +1,22 @@
+# Virtual Environment
+vocab_env/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# IDEs
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Output files (optional - remove if you want to track them)
+german_vocab_clean.txt
+german_vocab_excel.txt
