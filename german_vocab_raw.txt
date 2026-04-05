@@ -1,96 +1,206 @@
-aufwachsen
-beschließen
-sich entschließen (zu)
-sich leisten
-nennen
-stammen aus
+derVerwandte
+derBekante
+derKunde/Kundin
+derVermeiter/terin
+dumm
+dick
+dünn
+schwach
+stark
+wach
+müde
+fleißig
+faul
+leidtun
+zeigen
+raten
+derVorschlag
+empfehlen
+bestätigen
+beschweren
+Bescheid sagen
+verabreden
+verschieben
+verspäten
+vereinbaren
+dasGesicht
+derZahn, Zähne
+derHals
+derRücken
+derKörper
+derBauch
+derMagen
+dasKleid
+dieKette
+derAnzug
+dieHose
+dasHemd
+derRock
+dieMütze
+dieKanne
+dasRegal
+derStuhl
+derSchreibtisch
+derKühlschrank
+dieKaffeemaschine
+dieKamera
+dieLampe
+dieTasse
+derTeller
+liefern
+kündigen
+räumen
+stellen
+stehen
+einziehen
+besichtigen
+bestellen
+derUmzug
+derKeller
+dasErdgeschoss
+dieTreppe
+derStock
+derBalkon
+dieGarage
+dieAmpel
+anhalten
+bremsen
+derReifen
+derFahrplan
+verpassen
+vermissen
+umsteigen
+erlaubt
+verboten
+preiswert 
+billig
+dieUnterkunft
+dasBlatt, Blätter
+dieSeite
+weich
+schwer
+nass
+trocken
+leicht 
+kühl
+bewerben, beworben
+bestehen, bestanden
+berichten
+dieErledigung
+erledigen
+derKredit
+dasKonto
+überweissen
+dasPacket
+dieBriefmarke
+schicken
+derAusweis
+nirgends
+überalle
+LKW
+dasVerbrechen
+dieVerteidigung
+dieUnterlagen
+haftpflichtversicherung
+derAnwalt
+günstig
+erstatten
+aus Versehen
+Unfallversicherun
+dicht
+abshließen
+kundigen
+derVerlust
+sperren
+erstaunlich
+dieVerbroucherzentrale
+dasVerkehrsmittle
+derZettel
+derGrenzwert
+belasten
+dieLeidenschaft
+derFang
+jeweils
+dieÜberzeugung
+stets
+bereiten
+arg
+abbaubar
+giftig
+dieNahrungskette
+anreichen
+dasLabor
+ermitteln
+fache
+unbedenklich
+dasGewässer
+einheimische
+derFeuerlöscher
+derRückstand
+derSäugling
+stören
+derKrebs
+dieBrust
+dieFruchtbarkeit
+beeinträchtigen
+derEinsatz
+stecken
+diePfanne
+ausserdem
+dasVorliegen
+dieAussage
+verweissen
+dieErnährung
+demnach
+gelangen
+nach wie vor
+derVerkauf
+festlegen
+derSee
+dasMeer
+erlauben
+dasHöchstgehalt
+dieBelastung
+dasFach
+dieBerechnung
+gucken
+dieVeranstaltung
+dieAusstellung
 überlegen
-verändern (sich/etw.)
-Die Kinder sind groß geworden
-Wir werden alle älter
-Ich möchte später Ärztin werden
-Nächste Woche werde ich 18
-zurückgehen
-erwachsen
-ursprünglich
-vor sechs Monaten
-mit sechs Monaten
-in sechs Monaten
-seit sechs Monaten
-nach sechs Monaten
-für sechs Monate
-sechs Monate lang
-die Stimmung, -en
-aufmerksam
-unaufmerksam
-ehrlich
-unehrlich
-geduldig
-ungeduldig
-hübsch 
-hässlich
-kreativ
-unkreativ
-liebevoll
-lieblos
-mutig
-ängstlich
-ordentlich
-unordentlich
-praktisch
-unpraktisch
-respektvoll
-respektlos
-schüchtern
-tolerant
-intolerant
-treu
-untreu
-verständnisvoll
-verständnislos
-verantwortungsvoll
-verantwortungslos
-zuverlässig
-unzuverlässig
-total
-ziemlich
-etwas
-gar nicht
-überhaupt nicht
-nicht so ... wie
-genauso … wie
-die Beziehung, -en
-der Ehemann, ¨-er
-die Ehefrau, -en
-der Lebensgefährte, -n
-die Lebensgefährtin, -nen _____________________________________
-die Nichte, -n _____________________________________
-der Neffe, -n _____________________________________
-die Schwiegermutter, ¨- _____________________________________
-der Schwiegervater, ¨- _____________________________________
-der Schwiegersohn, ¨-e _____________________________________
-die Schwiegertochter, ¨- _____________________________________
-der Schwager, - _____________________________________
-die Schwägerin, -nen _____________________________________
-die WG, -s _____________________________________
-die Wohngemeinschaft, -en _____________________________________
-sich scheiden lassen (von) _____________________________________
-sich trennen (von) _____________________________________
-die Freude, -n _____________________________________
-die Fröhlichkeit (nur Sg.) _____________________________________
-die Langweile (nur Sg.) _____________________________________
-sich langweilen _____________________________________
-die Neugier (nur Sg.) _____________________________________
-neugierig (auf) _____________________________________
-der Stolz (nur Sg.) _____________________________________
-stolz (auf) _____________________________________
-die Trauer (nur Sg.) _____________________________________
-die Traurigkeit (nur Sg.) _____________________________________
-das Vertrauen (nur Sg.) _____________________________________
-vertrauen _____________________________________
-die Wut (nur Sg.) _____________________________________
-wütend (auf/über) _____________________________________
-anstrengend _____________________________________
-aufgeregt _____________________________________
-gespannt _____________________________________
-peinlich _____________________________________
+drehen
+einzig
+dieMehrheit
+dasSchweigen
+dieBehörde
+dieMessung
+vermehren
+herum 
+vermerht
+einhalten
+verzichten
+gewöhnen
+dieZucht
+derHandel
+derVertreter
+diePflicht
+dasAbkommen
+dieReiserücktrittsversicherung
+antreten
+erstatten
+vorzeitig
+dieFrist
+derDauerauftrag
+derBeitrag
+sparren
+derEinbruch
+dieHaftpflicht
+unterschiedlich
+entstehen
+dasErgebnis
+saugen
+derStaub
+dieMülltonne
+derGegenstand
+dasGefallen
+schildern
+dieBeschwerden
