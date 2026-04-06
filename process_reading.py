@@ -227,6 +227,16 @@ def get_translation(german_text):
         return "[TRANSLATION ERROR]"
 
 
+def normalize_translation(english, word_type):
+    if word_type == 'noun':
+        if english.lower().startswith('the '):
+            return english[4:]
+    elif word_type == 'verb':
+        if not english.lower().startswith('to '):
+            return 'to ' + english
+    return english
+
+
 # ── Main ───────────────────────────────────────────────────────────────────────
 
 def process():
@@ -301,7 +311,7 @@ def process():
 
         # 6. Translate
         translate_text = f"{article} {word}" if article else word
-        english = get_translation(translate_text)
+        english = normalize_translation(get_translation(translate_text), word_type)
         print(f"  →  {english}")
 
         insert_word(conn, word, article, english, word_type, forms, SOURCE, CHAPTER)
