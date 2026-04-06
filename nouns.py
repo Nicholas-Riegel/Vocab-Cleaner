@@ -1,65 +1,54 @@
 #!/usr/bin/env python3
 """
-Extracts all nouns from vocab_master.db, grouped by gender.
+Extracts all nouns from vocab_master.db in insertion order.
 Run with: python nouns.py
-Output:   nouns_by_gender.txt
+Output:   nouns_excel.txt  (tab-separated: Article / German / English)
 """
 
 import os
 import sqlite3
 
 DB_FILE  = 'vocab_master.db'
-OUT_FILE = 'nouns_by_gender.txt'
-
-LABELS = {
-    'der': 'DER  (masculine)',
-    'die': 'DIE  (feminine)',
-    'das': 'DAS  (neuter)',
-}
+OUT_FILE = 'nouns_excel.txt'
 
 
 def fetch_nouns(conn):
-    rows = conn.execute(
-        '''SELECT article, word, english
+    return conn.execute(
+        '''SELECT article, word, forms, english
            FROM vocab
            WHERE word_type = 'noun'
-           ORDER BY article, word COLLATE NOCASE'''
+           ORDER BY id'''
     ).fetchall()
 
-    groups = {'der': [], 'die': [], 'das': []}
-    for article, word, english in rows:
-        if article in groups:
-            groups[article].append((word, english or ''))
-    return groups
+
+def build_german(word, forms):
+    """Return the German display string, normalising plural info.
+
+    Old-style rows:  word = 'Stimmung, -en',  forms = ''   → 'Stimmung, -en'
+    New-style rows:  word = 'Vorschlag',       forms = 'Vorschläge' → 'Vorschlag, Vorschläge'
+    No plural info:  word = 'Verwandte',       forms = ''   → 'Verwandte'
+    """
+    if ',' in word:
+        return word          # plural already embedded
+    if forms and forms.strip():
+        return f"{word}, {forms.strip()}"
+    return word
 
 
-def write_output(groups):
-    total = sum(len(v) for v in groups.values())
-
-    lines = [
-        'German Nouns by Gender',
-        f'{total} nouns total',
-        '',
-    ]
-
-    for article in ('der', 'die', 'das'):
-        nouns = groups[article]
-        lines.append('=' * 55)
-        lines.append(f"  {LABELS[article]}  ({len(nouns)} nouns)")
-        lines.append('=' * 55)
-        lines.append('')
-        for word, english in nouns:
-            full = f"{article} {word}"
-            lines.append(f"  {full:<35}  {english}")
-        lines.append('')
+def write_output(rows):
+    lines = ['Article\tGerman\tEnglish\n']
+    for article, word, forms, english in rows:
+        german  = build_german(word, forms or '')
+        article = article or ''
+        english = english or ''
+        lines.append(f"{article}\t{german}\t{english}\n")
 
     with open(OUT_FILE, 'w', encoding='utf-8') as f:
-        f.write('\n'.join(lines))
+        f.writelines(lines)
 
+    total = len(rows)
     print(f"✅  Written to {OUT_FILE}")
     print(f"    {total} nouns total")
-    for article in ('der', 'die', 'das'):
-        print(f"    {LABELS[article]}: {len(groups[article])}")
 
 
 def main():
@@ -68,9 +57,9 @@ def main():
         return
 
     conn = sqlite3.connect(DB_FILE)
-    groups = fetch_nouns(conn)
+    rows = fetch_nouns(conn)
     conn.close()
-    write_output(groups)
+    write_output(rows)
 
 
 if __name__ == '__main__':

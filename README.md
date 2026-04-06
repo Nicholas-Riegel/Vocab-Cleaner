@@ -39,14 +39,20 @@ Use this when you've noted down words encountered while reading (not from a text
 
 ---
 
-### `nouns.py` — Generate noun list by gender
-Run any time you want a fresh study list of all nouns grouped by der/die/das.
+### `nouns.py` — Export noun list to spreadsheet
+Run any time you want a tab-separated export of all nouns in insertion order.
 
 ```bash
 python nouns.py
 ```
 
-Output: `nouns_by_gender.txt`
+Output: `nouns_excel.txt` — three columns: **Article**, **German**, **English**
+
+**Importing into Google Sheets:**
+1. Go to **File → Import**
+2. Click **Upload** and select `nouns_excel.txt`
+3. Under **Separator type**, choose **Tab**
+4. Click **Import data**
 
 ---
 
@@ -57,7 +63,7 @@ Output: `nouns_by_gender.txt`
 | `german_vocab_raw.txt` | Paste new raw vocab here before each run |
 | `german_vocab_excel.txt` | Output from `clean_vocab.py` — paste into Excel |
 | `vocab_master.db` | SQLite database — all words, articles, forms, source, chapter |
-| `nouns_by_gender.txt` | Generated noun study list — regenerate any time with `nouns.py` |
+| `nouns_excel.txt` | Tab-separated noun export — regenerate any time with `nouns.py` |
 
 ---
 

@@ -1,0 +1,130 @@
+Article	German	English
+die	Stimmung, -en	mood
+die	Beziehung, -en	relationship
+der	Ehemann, ¨-er	husband
+die	Ehefrau, -en	wife
+der	Lebensgefährte, -n	partner
+die	Lebensgefährtin, -nen	partner
+die	Nichte, -n	niece
+der	Neffe, -n	nephew
+die	Schwiegermutter, ¨-	mother-in-law
+der	Schwiegervater, ¨-	father-in-law
+der	Schwiegersohn, ¨-e	son-in-law
+die	Schwiegertochter, ¨-	daughter-in-law
+der	Schwager, -	brother-in-law
+die	Schwägerin, -nen	sister-in-law
+die	WG, -s	WG
+die	Wohngemeinschaft, -en	shared apartment
+die	Freude, -n	joy
+die	Fröhlichkeit (nur Sg.)	happiness (sg. only)
+die	Langweile (nur Sg.)	boredom (sg. only)
+die	Neugier (nur Sg.)	curiosity (sg. only)
+der	Stolz (nur Sg.)	pride (sg. only)
+die	Trauer (nur Sg.)	mourning (sg. only)
+die	Traurigkeit (nur Sg.)	sadness (only sg.)
+das	Vertrauen (nur Sg.)	trust (sg. only)
+die	Wut (nur Sg.)	anger (sg. only)
+der	Verwandte	the relative
+der	Bekannte	the acquaintance
+der	Kunde, Kunden	the customer
+der	Vermieter, Vermieter	the landlord
+der	Vorschlag, Vorschläge	the suggestion
+das	Gesicht, Gesichter	the face
+der	Zahn, Zähne	the tooth
+der	Hals, Hälse	the neck
+der	Rücken, Rücken	the back
+der	Körper, Körper	the body
+der	Bauch, Bäuche	the stomach
+der	Magen, Mägen	the stomach
+das	Kleid, Kleider	the dress
+die	Kette, Ketten	the chain
+der	Anzug, Anzüge	the suit
+die	Hose, Hosen	the pants
+das	Hemd, Hemden	the shirt
+der	Rock, Röcke	the skirt
+die	Mütze, Mützen	the hat
+die	Kanne, Kannen	the pot
+das	Regal, Regale	the shelf
+der	Stuhl, Stühle	the chair
+der	Schreibtisch, Schreibtische	the desk
+der	Kühlschrank, Kühlschränke	the refrigerator
+die	Kaffeemaschine, Kaffeemaschinen	the coffee machine
+die	Kamera, Kameras	the camera
+die	Lampe, Lampen	the lamp
+die	Tasse, Tassen	the cup
+der	Teller, Teller	the dish
+der	Umzug, Umzüge	the move
+der	Keller, Keller	the cellar
+das	Erdgeschoss, Erdgeschosse	the ground floor
+die	Treppe, Treppen	the stairs
+der	Stock, Stöcke	the stick
+der	Balkon, Balkons	the balcony
+die	Garage, Garagen	the garage
+die	Ampel, Ampeln	the traffic light
+der	Reifen, Reifen	the tire
+der	Fahrplan, Fahrpläne	the timetable
+die	Unterkunft, Unterkünfte	the accommodation
+das	Blatt, Blätter	the leaf
+die	Seite, Seiten	the page
+die	Erledigung, Erledigungen	the completion
+der	Kredit, Kredite	the credit
+das	Konto, Konten	the account
+das	Paket, Pakete	the package
+die	Briefmarke, Briefmarken	the stamp
+der	Ausweis, Ausweise	the ID card
+das	Verbrechen, Verbrechen	the crime
+die	Verteidigung, Verteidigungen	the defense
+die	Unterlagen	the documents
+der	Anwalt, Anwälte	the lawyer
+der	Verlust, Verluste	the loss
+die	Verbroucherzentrale	the consumer advice center
+das	Verkehrsmittle	the means of transport
+der	Zettel, Zettel	the note
+der	Grenzwert, Grenzwerte	the limit value
+die	Leidenschaft, Leidenschaften	the passion
+der	Fang, Fänge	the catch
+die	Überzeugung, Überzeugungen	the conviction
+die	Nahrungskette, Nahrungsketten	the food chain
+das	Labor, Labore	the laboratory
+das	Gewässer, Gewässer	the water
+der	Feuerlöscher, Feuerlöscher	the fire extinguisher
+der	Rückstand, Rückstände	the residue
+der	Säugling, Säuglinge	the infant
+der	Krebs, Krebse	the cancer
+die	Brust, Brüste	the chest
+die	Fruchtbarkeit	the fertility
+der	Einsatz, Einsätze	the use
+die	Pfanne, Pfannen	the pan
+das	Vorliegen	the presence
+die	Aussage, Aussagen	the statement
+die	Ernährung, Ernährungen	the diet
+der	Verkauf, Verkäufe	the sale
+der	See, Seen	the lake
+das	Meer, Meere	the sea
+das	Höchstgehalt	the maximum salary
+die	Belastung, Belastungen	the burden
+das	Fach, Fächer	the subject
+die	Berechnung, Berechnungen	the calculation
+die	Veranstaltung, Veranstaltungen	the event
+die	Ausstellung, Ausstellungen	the exhibition
+die	Mehrheit, Mehrheiten	the majority
+das	Schweigen	the silence
+die	Behörde, Behörden	the authority
+die	Messung, Messungen	the measurement
+die	Zucht, Zuchten	the breeding
+der	Handel, Händel	the trade
+der	Vertreter, Vertreter	the representative
+die	Pflicht, Pflichten	the duty
+das	Abkommen, Abkommen	the agreement
+die	Reiserücktrittsversicherung, Reiserücktrittsversicherungen	the travel cancellation insurance
+die	Frist, Fristen	the deadline
+der	Dauerauftrag, Daueraufträge	the standing order
+der	Beitrag, Beiträge	the contribution
+der	Einbruch, Einbrüche	the break-in
+die	Haftpflicht, Haftpflichten	the liability
+das	Ergebnis, Ergebnisse	the result
+der	Staub, Stäube	the dust
+die	Mülltonne, Mülltonnen	the garbage can
+der	Gegenstand, Gegenstände	the object
+das	Gefallen, Gefallen	the liking
+die	Beschwerden	the complaints
