@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
 Extracts all nouns from vocab_master.db in insertion order.
-Run with: python nouns.py
-Output:   nouns_excel.txt  (tab-separated: Article / German / English)
+Run with: python get_nouns.py
+Output:   output.txt  (tab-separated: Article / German / English)
 """
 
 import os
 import sqlite3
 
 DB_FILE  = 'vocab_master.db'
-OUT_FILE = 'nouns_excel.txt'
+OUT_FILE = 'output.txt'
 
 
 def fetch_nouns(conn):

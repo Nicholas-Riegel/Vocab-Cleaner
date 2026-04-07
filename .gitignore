@@ -19,9 +19,7 @@ Thumbs.db
 
 # Personal data
 vocab_master.db
-german_vocab_raw.txt
+input.txt
 
 # Generated output files
-german_vocab_excel.txt
-nouns_excel.txt
-nouns_by_gender.txt
+output.txt

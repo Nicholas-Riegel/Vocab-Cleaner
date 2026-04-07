@@ -6,7 +6,7 @@
 cd "/Users/nicholas/Deutsch/Vocab Cleaner"
 python3 -m venv vocab_env
 source vocab_env/bin/activate
-pip install googletrans==4.0.0rc1
+pip install httpx
 ```
 
 Always activate the virtual environment before running any script:
@@ -16,37 +16,69 @@ source vocab_env/bin/activate
 
 ---
 
-## Scripts
+## Workflow
 
-### `clean_vocab.py` — Add textbook words
-Use this when adding vocabulary from a structured source (textbook, course).
+### 1. Prepare `input.txt`
 
-1. Paste new words into `german_vocab_raw.txt`, one per line, e.g. `die Stimmung, -en`
-2. Run: `python clean_vocab.py`
-3. You'll be prompted for the source book and chapter number
-4. Translates new words, skips duplicates, saves to `vocab_master.db`
-5. Also writes `german_vocab_excel.txt` for pasting into Excel
+Add one word per line. Translations are **required** — provide them as a tab-separated value on the same line:
 
----
-
-### `process_reading.py` — Add words from reading
-Use this when you've noted down words encountered while reading (not from a textbook).
-
-1. Paste new words into `german_vocab_raw.txt`, one per line
-2. Run: `python process_reading.py`
-3. Automatically looks up noun plurals and irregular verb forms via Wiktionary
-4. Translates and saves to `vocab_master.db` with source `reading`, chapter `0`
-
----
-
-### `nouns.py` — Export noun list to spreadsheet
-Run any time you want a tab-separated export of all nouns in insertion order.
-
-```bash
-python nouns.py
+```
+aufwachsen	to grow up, to be raised
+die Stimmung, -en	mood, atmosphere
+schüchtern	shy
 ```
 
-Output: `nouns_excel.txt` — three columns: **Article**, **German**, **English**
+You can copy the German words from your textbook and ask Copilot to add the translations before running the script.
+
+Nouns with a known plural can include it inline (the script will also look it up via Wiktionary if omitted):
+```
+der Zahn, Zähne	tooth
+```
+
+Lines without a translation are still accepted — they will be inserted into the database with `[TODO]` and flagged at the end of the run.
+
+---
+
+### 2. Run `input_to_db.py`
+
+```bash
+python input_to_db.py
+```
+
+You will be prompted for:
+- **Source** — e.g. `Deutsch Intensiv B1`
+- **Chapter number**
+
+The script will:
+- Skip words already in the database (duplicates)
+- Merge new translation terms into the existing entry if a better translation is provided
+- Look up noun plurals and irregular verb forms via Wiktionary
+- Insert new words into `vocab_master.db`
+- Print a summary of any `[TODO]` words that still need translations
+
+---
+
+### 3. Export nouns with `get_nouns.py`
+
+Run any time you want a tab-separated export of all nouns, ready to paste into a spreadsheet:
+
+```bash
+python get_nouns.py
+```
+
+Output: `output.txt` — three columns: **Article** / **German** / **English**
+
+---
+
+## Files
+
+| File | Purpose |
+|------|---------|
+| `input.txt` | Words to add — edit this before each run |
+| `input_to_db.py` | Processes `input.txt` into the database |
+| `get_nouns.py` | Exports all nouns to `output.txt` |
+| `vocab_master.db` | The database — all vocabulary lives here |
+| `output.txt` | Tab-separated noun export for spreadsheets |
 
 **Importing into Google Sheets:**
 1. Go to **File → Import**
