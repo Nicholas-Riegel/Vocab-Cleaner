@@ -18,35 +18,52 @@ source vocab_env/bin/activate
 
 ## Workflow
 
-### 1. Prepare `input.txt`
+### 1. Clean the raw wordlist with `input_cleaner.py`
 
-Add one word per line. Translations are **required** — provide them as a tab-separated value on the same line:
-
+Paste the raw book wordlist into `input.txt`, then run:
+```bash
+python input_cleaner.py
 ```
-aufwachsen	to grow up, to be raised
-die Stimmung, -en	mood, atmosphere
-schüchtern	shy
-```
-
-You can copy the German words from your textbook and ask Copilot to add the translations before running the script.
-
-Nouns with a known plural can include it inline (the script will also look it up via Wiktionary if omitted):
-```
-der Zahn, Zähne	tooth
-```
-
-Lines without a translation are still accepted — they will be inserted into the database with `[TODO]` and flagged at the end of the run.
+This strips the `_____` fill-in lines from the book, leaving one word/phrase per line.
 
 ---
 
-### 2. Run `input_to_db.py`
+### 2. Ask Copilot to add translations
+
+Open a conversation and ask Copilot to add tab-separated English translations to every line in `input.txt`. Copilot should follow this checklist:
+
+**Translation phase checklist:**
+- Output format is `German\tEnglish` or `German\tEnglish\tnotes` (tab-separated)
+- Split `der/die Word` gendered pairs into two separate lines with gendered translations:
+  `der Deutsche\tthe German (male)` and `die Deutsche\tthe German (female)`
+- Reformat `Word (der/die/das)` — move the article to the front: `Herr (der)` → `der Herr`
+- Strip `(Pl. X)` entirely — Wiktionary looks up plurals automatically
+- Move `(nur Sg.)` / `(nur Pl.)` to the third tab column as a note
+- Any other parenthetical annotation goes in the third column as a note
+- Fix any typos noticed in the German while translating
+
+**Example output:**
+```
+der Name	the name
+das Alter	the age	nur Sg.
+der Deutsche	the German (male)
+die Deutsche	the German (female)
+heißen	to be called
+Wie heißen Sie?	What is your name?
+```
+
+---
+
+### 3. Run `input_to_db.py`
 
 ```bash
 python input_to_db.py
 ```
 
+Lines without a translation are still accepted — they will be inserted into the database with `[TODO]` and flagged at the end of the run.
+
 You will be prompted for:
-- **Source** — e.g. `Deutsch Intensiv B1`
+- **Source** — e.g. `Deutsch Intensiv A1`
 - **Chapter number**
 
 The script will:

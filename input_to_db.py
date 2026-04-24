@@ -21,7 +21,7 @@ import sqlite3
 import time
 from datetime import datetime, timezone
 
-INPUT_FILE = 'input.txt'
+INPUT_FILE = 'input.tsv'
 DB_FILE    = 'vocab_master.db'
 
 
@@ -43,7 +43,9 @@ def init_db(conn):
             article   TEXT,
             english   TEXT,
             word_type  TEXT,
+            plural     TEXT    DEFAULT '',
             forms      TEXT    DEFAULT '',
+            notes      TEXT    DEFAULT '',
             source     TEXT,
             chapter    INTEGER,
             created_at TEXT,
@@ -53,12 +55,13 @@ def init_db(conn):
     conn.commit()
 
 
-def ensure_forms_column(conn):
-    try:
-        conn.execute("ALTER TABLE vocab ADD COLUMN forms TEXT DEFAULT ''")
-        conn.commit()
-    except sqlite3.OperationalError:
-        pass  # Column already exists
+def ensure_extra_columns(conn):
+    for col, default in [('forms', ''), ('plural', ''), ('notes', '')]:
+        try:
+            conn.execute(f"ALTER TABLE vocab ADD COLUMN {col} TEXT DEFAULT '{default}'")
+            conn.commit()
+        except sqlite3.OperationalError:
+            pass  # Column already exists
 
 
 def count_words(conn):
@@ -83,27 +86,42 @@ def word_exists(conn, base_word, article):
     return row is not None
 
 
-def update_translation(conn, base_word, article, english):
+def word_is_todo(conn, base_word, article):
+    """Returns True if the word exists in the DB with a [TODO] translation."""
+    if article:
+        row = conn.execute(
+            "SELECT 1 FROM vocab WHERE (word = ? OR word LIKE ?) AND article = ? AND english = '[TODO]'",
+            (base_word, base_word + ', %', article)
+        ).fetchone()
+    else:
+        row = conn.execute(
+            "SELECT 1 FROM vocab WHERE (word = ? OR word LIKE ?) AND article IS NULL AND english = '[TODO]'",
+            (base_word, base_word + ', %')
+        ).fetchone()
+    return row is not None
+
+
+def update_translation(conn, base_word, article, english, notes):
     ts = now()
     if article:
         conn.execute(
-            "UPDATE vocab SET english = ?, updated_at = ? WHERE (word = ? OR word LIKE ?) AND article = ?",
-            (english, ts, base_word, base_word + ', %', article)
+            "UPDATE vocab SET english = ?, notes = CASE WHEN notes = '' THEN ? ELSE notes END, updated_at = ? WHERE (word = ? OR word LIKE ?) AND article = ? AND english = '[TODO]'",
+            (english, notes, ts, base_word, base_word + ', %', article)
         )
     else:
         conn.execute(
-            "UPDATE vocab SET english = ?, updated_at = ? WHERE (word = ? OR word LIKE ?) AND article IS NULL",
-            (english, ts, base_word, base_word + ', %')
+            "UPDATE vocab SET english = ?, notes = CASE WHEN notes = '' THEN ? ELSE notes END, updated_at = ? WHERE (word = ? OR word LIKE ?) AND article IS NULL AND english = '[TODO]'",
+            (english, notes, ts, base_word, base_word + ', %')
         )
     conn.commit()
 
 
-def insert_word(conn, word, article, english, word_type, forms, source, chapter):
+def insert_word(conn, word, article, english, word_type, plural, forms, notes, source, chapter):
     ts = now()
     conn.execute(
-        '''INSERT INTO vocab (word, article, english, word_type, forms, source, chapter, created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-        (word, article, english, word_type, forms, source, chapter, ts, ts)
+        '''INSERT INTO vocab (word, article, english, word_type, plural, forms, notes, source, chapter, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+        (word, article, english, word_type, plural, forms, notes, source, chapter, ts, ts)
     )
     conn.commit()
 
@@ -151,10 +169,12 @@ def parse_entry(text):
       'fahren, gefahren'     → word='fahren',   inline_forms='gefahren'
     """
     provided_translation = None
+    provided_notes = None
     if '\t' in text:
-        german_part, eng_part = text.split('\t', 1)
-        provided_translation = eng_part.strip() or None
-        text = german_part.strip()
+        parts = text.split('\t', 2)
+        text = parts[0].strip()
+        provided_translation = parts[1].strip() or None if len(parts) > 1 else None
+        provided_notes = parts[2].strip() or None if len(parts) > 2 else None
 
     # Noun: line starts with a grammatical article
     for article in ('der', 'die', 'das'):
@@ -162,23 +182,23 @@ def parse_entry(text):
             rest = text[len(article) + 1:]
             if ', ' in rest:
                 noun, inline = rest.split(', ', 1)
-                return article, noun.strip(), inline.strip(), 'noun', provided_translation
-            return article, rest.strip(), '', 'noun', provided_translation
+                return article, noun.strip(), inline.strip(), 'noun', provided_translation, provided_notes
+            return article, rest.strip(), '', 'noun', provided_translation, provided_notes
 
     # Verb with inline irregular forms: 'fahren, fuhr, gefahren'
     if ', ' in text:
         first = text.split(',')[0].strip()
         if ' ' not in first and re.search(r'(en|ern|ieren)$', first):
             parts = [p.strip() for p in text.split(', ')]
-            return None, parts[0], ', '.join(parts[1:]), 'verb', provided_translation
+            return None, parts[0], ', '.join(parts[1:]), 'verb', provided_translation, provided_notes
 
     if text.startswith('sich '):
-        return None, text, '', 'verb', provided_translation
+        return None, text, '', 'verb', provided_translation, provided_notes
     if ' ' in text:
-        return None, text, '', 'phrase', provided_translation
+        return None, text, '', 'phrase', provided_translation, provided_notes
     if re.search(r'(en|ern|ieren)$', text):
-        return None, text, '', 'verb', provided_translation
-    return None, text, '', 'other', provided_translation
+        return None, text, '', 'verb', provided_translation, provided_notes
+    return None, text, '', 'other', provided_translation, provided_notes
 
 
 # ── Wiktionary lookups ─────────────────────────────────────────────────────────
@@ -264,12 +284,7 @@ def main():
     print("📖  German Vocabulary → Database")
     print("─" * 40)
 
-    typos_ok = input("Have the German words been checked for typos? (y/n): ").strip().lower()
-    if typos_ok != 'y':
-        print("Please check the words in input.txt and re-run.")
-        return
-
-    translations_ok = input("Are translations provided for all words? (y/n): ").strip().lower()
+    translations_ok = input("Are translations provided for all words? (Y/n): ").strip().lower() or "y"
     if translations_ok != 'y':
         print("Please add translations to input.txt and re-run.")
         return
@@ -278,13 +293,12 @@ def main():
 
     conn = get_connection()
     init_db(conn)
-    ensure_forms_column(conn)
+    ensure_extra_columns(conn)
 
     print(f"📚  {count_words(conn)} words currently in database\n")
 
-    source = input("Source (e.g. Deutsch Intensiv B1): ").strip()
-    if not source:
-        source = 'unknown'
+    source = 'Reading'
+    print(f"📗  Source: {source}")
 
     chapter_raw = input("Chapter number: ").strip()
     try:
@@ -301,7 +315,6 @@ def main():
 
     added   = 0
     skipped = 0
-    merged  = 0
     todos   = []
 
     for raw_line in lines:
@@ -314,33 +327,36 @@ def main():
         if not line:
             continue
 
-        article, word, inline_forms, word_type, provided_translation = parse_entry(line)
+        article, word, inline_forms, word_type, provided_translation, provided_notes = parse_entry(line)
         display = f"{article} {word}" if article else word
 
         # ── Duplicate ──────────────────────────────────────────────────────────
         if word_exists(conn, word, article):
-            if provided_translation:
+            if provided_translation and word_is_todo(conn, word, article):
                 english = normalize_translation(provided_translation, word_type)
-                update_translation(conn, word, article, english)
-                print(f"   ✏️   Updated: {display} → \"{english}\"")
-                merged += 1
+                notes = provided_notes or ''
+                update_translation(conn, word, article, english, notes)
+                print(f"   ✏️   Updated TODO: {display}  →  {english}")
+                added += 1
             else:
-                print(f"   ⏭️   Duplicate (no translation provided): {display}")
-            skipped += 1
+                print(f"   ⏭️   Duplicate (skipped): {display}")
+                skipped += 1
             continue
 
         # ── New word ───────────────────────────────────────────────────────────
         print(f"   {display}", end='')
 
         # Look up grammatical forms via Wiktionary
+        plural = ''
         forms = ''
+        notes = provided_notes or ''
         if word_type == 'noun':
             if inline_forms:
-                forms = inline_forms
+                plural = inline_forms
             else:
-                forms = get_noun_plural(word)
+                plural = get_noun_plural(word)
                 time.sleep(0.3)
-            print(f"  [{forms or '—'}]", end='')
+            print(f"  [{plural or '—'}]", end='')
 
         elif word_type == 'verb':
             if inline_forms:
@@ -360,14 +376,14 @@ def main():
             todos.append(display)
             print(f"  →  ⚠️  [TODO]")
 
-        insert_word(conn, word, article, english, word_type, forms, source, chapter)
+        insert_word(conn, word, article, english, word_type, plural, forms, notes, source, chapter)
         added += 1
 
     conn.close()
 
     print(f"\n{'─' * 40}")
     print(f"✅  Done.")
-    print(f"    Added:   {added}  |  Duplicates: {skipped}  |  Updated: {merged}")
+    print(f"    Added:   {added}  |  Duplicates: {skipped}")
     print(f"    Total in database: {count_words(get_connection())}")
 
     if todos:
