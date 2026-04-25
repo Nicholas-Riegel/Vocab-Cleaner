@@ -75,19 +75,35 @@ The script will:
 
 ---
 
-### 3. Export nouns with `get_nouns.py`
+### 3. Check for data issues with `db_check.py`
 
-Run any time you want a tab-separated export of all nouns, ready to paste into a spreadsheet:
+Before exporting, run this to flag and fix suspicious entries (misclassified word types, bad translations, nouns missing articles, etc.):
 
 ```bash
-python get_nouns.py
+python db_check.py
 ```
 
-Output: `output.txt` — three columns: **Article** / **German** / **English**
+You'll be prompted to select a source and chapter. For each flagged entry you can skip, edit one or more fields, or quit early.
 
 ---
 
-## Files
+### 4. Export with `export.py`
+
+Run to export all vocabulary (or filtered by source/chapter) to a tab-separated file for Google Sheets:
+
+```bash
+python export.py
+```
+
+You'll be prompted to select a source and chapter. Output: `output.txt` — columns: **German** / **Article** / **Plural** / **Verb Forms** / **English** / **Notes** / **Word Type** / **Source** / **Chapter**
+
+**Importing into Google Sheets:**
+1. Go to **File → Import**
+2. Click **Upload** and select `output.txt`
+3. Under **Separator type**, choose **Tab**
+4. Click **Import data**
+
+
 
 | File | Purpose |
 |------|---------|

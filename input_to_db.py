@@ -167,6 +167,7 @@ def parse_entry(text):
     Noun plural / verb forms can be included inline in the German part:
       'die Stimmung, -en'    → word='Stimmung', inline_forms='-en'
       'fahren, gefahren'     → word='fahren',   inline_forms='gefahren'
+      'Deutschland (das)'    → article='(das)', word='Deutschland'  (gender known, article not used in practice)
     """
     provided_translation = None
     provided_notes = None
@@ -185,6 +186,13 @@ def parse_entry(text):
                 return article, noun.strip(), inline.strip(), 'noun', provided_translation, provided_notes
             return article, rest.strip(), '', 'noun', provided_translation, provided_notes
 
+    # Noun with parenthetical article: 'Deutschland (das)' — gender known but article not used in practice
+    m = re.match(r'^(.+?)\s+\((der|die|das)\)$', text, re.IGNORECASE)
+    if m:
+        word_part = m.group(1).strip()
+        paren_article = f'({m.group(2).lower()})'
+        return paren_article, word_part, '', 'noun', provided_translation, provided_notes
+
     # Verb with inline irregular forms: 'fahren, fuhr, gefahren'
     if ', ' in text:
         first = text.split(',')[0].strip()
@@ -196,7 +204,10 @@ def parse_entry(text):
         return None, text, '', 'verb', provided_translation, provided_notes
     if ' ' in text:
         return None, text, '', 'phrase', provided_translation, provided_notes
-    if re.search(r'(en|ern|ieren)$', text):
+    if re.search(r'(en|eln|ern|ieren)$', text):
+        return None, text, '', 'verb', provided_translation, provided_notes
+    # Verbs ending in -n that don't match the pattern above (sein, tun)
+    if text.lower() in ('sein', 'tun'):
         return None, text, '', 'verb', provided_translation, provided_notes
     return None, text, '', 'other', provided_translation, provided_notes
 
