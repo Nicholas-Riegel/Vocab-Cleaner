@@ -215,24 +215,38 @@ def parse_entry(text):
 # ── Wiktionary lookups ─────────────────────────────────────────────────────────
 
 def get_wikitext(word):
-    try:
-        import httpx
-        r = httpx.get(
-            'https://de.wiktionary.org/w/api.php',
-            params={
-                'action': 'parse',
-                'page':   word,
-                'prop':   'wikitext',
-                'format': 'json',
-                'redirects': '1',
-            },
-            headers={'User-Agent': 'GermanVocabLearner/1.0 (personal study tool)'},
-            timeout=10.0,
-        )
-        data = r.json()
-        return data.get('parse', {}).get('wikitext', {}).get('*', '')
-    except Exception:
-        return ''
+    import httpx
+    params = {
+        'action':    'parse',
+        'page':      word,
+        'prop':      'wikitext',
+        'format':    'json',
+        'redirects': '1',
+    }
+    headers = {'User-Agent': 'GermanVocabLearner/1.0 (personal study tool)'}
+    for attempt in range(2):
+        try:
+            r = httpx.get(
+                'https://de.wiktionary.org/w/api.php',
+                params=params,
+                headers=headers,
+                timeout=10.0,
+            )
+            r.raise_for_status()
+            data = r.json()
+            return data.get('parse', {}).get('wikitext', {}).get('*', '')
+        except httpx.HTTPStatusError as e:
+            if attempt == 0:
+                retry_after = int(e.response.headers.get('Retry-After', 10))
+                time.sleep(retry_after)
+            else:
+                print(f' [wiktionary error: {type(e).__name__}: {e}]', end='')
+        except Exception as e:
+            if attempt == 0:
+                time.sleep(5.0)
+            else:
+                print(f' [wiktionary error: {type(e).__name__}: {e}]', end='')
+    return ''
 
 
 def clean_wiki(text):
@@ -254,15 +268,15 @@ def get_noun_plural(word):
     for art in ('die ', 'der ', 'das '):
         if plural.lower().startswith(art):
             plural = plural[len(art):]
-    if plural in ('kein Plural', '—', '-', ''):
+    if plural in ('—', '-', ''):
         return ''
+    if plural == 'kein Plural':
+        return 'kein Plural'
     return plural.strip()
 
 
 def get_verb_forms(infinitive):
-    """
-    Return 'Präteritum, Partizip II' for irregular verbs, or '' for regular ones.
-    """
+    """Return 'Präteritum, Partizip II' from Wiktionary, or '' if not found."""
     lookup   = infinitive.replace('sich ', '').strip()
     wikitext = get_wikitext(lookup)
     if not wikitext:
@@ -274,10 +288,6 @@ def get_verb_forms(infinitive):
     prateritum = clean_wiki(pm.group(1))
     partizip   = clean_wiki(pp.group(1))
     if not prateritum or not partizip:
-        return ''
-    stem       = re.sub(r'(en|ern|eln)$', '', lookup)
-    is_regular = prateritum in (stem + 'te', stem + 'ete')
-    if is_regular:
         return ''
     return f"{prateritum}, {partizip}"
 
@@ -366,7 +376,7 @@ def main():
                 plural = inline_forms
             else:
                 plural = get_noun_plural(word)
-                time.sleep(0.3)
+                time.sleep(2.0)
             print(f"  [{plural or '—'}]", end='')
 
         elif word_type == 'verb':
@@ -374,7 +384,7 @@ def main():
                 forms = inline_forms
             else:
                 forms = get_verb_forms(word)
-                time.sleep(0.3)
+                time.sleep(2.0)
             if forms:
                 print(f"  [{forms}]", end='')
 

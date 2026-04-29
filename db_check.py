@@ -12,10 +12,89 @@ Run with: python db_check.py
 """
 
 import os
+import re
 import sqlite3
+import time
 
 DB_FILE = 'vocab_master.db'
 
+
+# ── Wiktionary helpers ─────────────────────────────────────────────────────────
+
+def get_wikitext(word):
+    import httpx
+    params = {
+        'action':    'parse',
+        'page':      word,
+        'prop':      'wikitext',
+        'format':    'json',
+        'redirects': '1',
+    }
+    headers = {'User-Agent': 'GermanVocabLearner/1.0 (personal study tool)'}
+    for attempt in range(2):
+        try:
+            r = httpx.get(
+                'https://de.wiktionary.org/w/api.php',
+                params=params,
+                headers=headers,
+                timeout=10.0,
+            )
+            r.raise_for_status()
+            data = r.json()
+            return data.get('parse', {}).get('wikitext', {}).get('*', '')
+        except httpx.HTTPStatusError as e:
+            if attempt == 0:
+                retry_after = int(e.response.headers.get('Retry-After', 10))
+                time.sleep(retry_after)
+            else:
+                print(f' [error: {type(e).__name__}: {e}]', end='')
+        except Exception as e:
+            if attempt == 0:
+                time.sleep(5.0)
+            else:
+                print(f' [error: {type(e).__name__}: {e}]', end='')
+    return ''
+
+
+def clean_wiki(text):
+    text = re.sub(r'\[\[(?:[^\]|]+\|)?([^\]|]+)\]\]', r'\1', text)
+    text = re.sub(r"'{2,3}", '', text)
+    text = re.sub(r'<[^>]+>', '', text)
+    return text.strip()
+
+
+def fetch_verb_forms(infinitive):
+    """Return 'Präteritum, Partizip II' from Wiktionary, or '' if not found."""
+    lookup = infinitive.replace('sich ', '').strip()
+    wikitext = get_wikitext(lookup)
+    if not wikitext:
+        return ''
+    pm = re.search(r'\|Präteritum_ich\s*=\s*(.+?)(?:\n|\||})', wikitext)
+    pp = re.search(r'\|Partizip II\s*=\s*(.+?)(?:\n|\||})', wikitext)
+    if not pm or not pp:
+        return ''
+    prateritum = clean_wiki(pm.group(1))
+    partizip   = clean_wiki(pp.group(1))
+    if not prateritum or not partizip:
+        return ''
+    return f"{prateritum}, {partizip}"
+
+
+def fetch_noun_plural(word):
+    """Return the Nominativ Plural form from Wiktionary, or '' if not found / no plural."""
+    wikitext = get_wikitext(word)
+    if not wikitext:
+        return ''
+    m = re.search(r'\|Nominativ Plural\s*(?:\d+\s*)?=\s*(.+?)(?:\n|\||})', wikitext)
+    if not m:
+        return ''
+    plural = clean_wiki(m.group(1))
+    for art in ('die ', 'der ', 'das '):
+        if plural.lower().startswith(art):
+            plural = plural[len(art):]
+    if plural in ('kein Plural', '—', '-', ''):
+        return 'kein Plural'
+    return plural.strip()
 
 def get_sources(conn):
     return conn.execute(
@@ -84,11 +163,17 @@ def run_checks(conn, source=None, chapter=None):
         if word_type == 'verb':
             if english and not english.lower().startswith('to '):
                 reasons.append(f'verb but English doesn\'t start with "to": "{english}"')
-            base = word.split()[0] if word else ''
+            base = (word or '').replace('sich ', '', 1).strip().split()[0]
             if base and not (base.endswith('en') or base.endswith('eln') or base.endswith('ern')):
                 reasons.append(f'verb but German doesn\'t look like an infinitive: "{word}"')
-            if base and base.lower().startswith('ge'):
-                reasons.append(f'verb but German starts with "ge-" — likely a past participle: "{word}"')
+            if base and base.lower().startswith('ge') and base.endswith('t'):
+                reasons.append(f'verb but German starts with "ge-" and ends in "-t" — likely a past participle: "{word}"')
+
+        if word_type == 'verb' and not (forms or '').strip():
+            reasons.append('verb missing forms')
+
+        if word_type == 'noun' and not (plural or '').strip():
+            reasons.append('noun missing plural')
 
         if word_type == 'noun' and not (article or '').strip():
             reasons.append('noun missing article — add article or use "Word (das)" form for grammatical-gender-only')
@@ -202,6 +287,49 @@ def main():
         print(f'─── {i}/{len(flagged)} ───────────────────────────────────────')
         print(f'  ⚠️  {reason}')
         print_entry(d)
+
+        if reason in ('verb missing forms', 'noun missing plural'):
+            is_verb = reason == 'verb missing forms'
+            field   = 'forms' if is_verb else 'plural'
+            print('  Fetching from Wiktionary...', end='', flush=True)
+            found = fetch_verb_forms(d['word']) if is_verb else fetch_noun_plural(d['word'])
+            time.sleep(2.0)
+            if found:
+                print(f'  {found}')
+                print(f'\n  [Enter] save "{found}"  |  e  edit manually  |  s  skip  |  q  quit: ', end='')
+                cmd = input().strip().lower()
+                if cmd == 'q':
+                    print('\nStopped early.')
+                    break
+                elif cmd == 's':
+                    skipped += 1
+                elif cmd == 'e':
+                    changed = prompt_fix(conn, d)
+                    if changed:
+                        fixed += 1
+                    else:
+                        skipped += 1
+                else:
+                    conn.execute(f'UPDATE vocab SET {field} = ? WHERE id = ?', (found, d['id']))
+                    conn.commit()
+                    print(f'  ✅  Saved.')
+                    fixed += 1
+            else:
+                print('  not found on Wiktionary.')
+                print('\n  [Enter] skip  |  e  edit manually  |  q  quit: ', end='')
+                cmd = input().strip().lower()
+                if cmd == 'q':
+                    print('\nStopped early.')
+                    break
+                elif cmd == 'e':
+                    changed = prompt_fix(conn, d)
+                    if changed:
+                        fixed += 1
+                    else:
+                        skipped += 1
+                else:
+                    skipped += 1
+            continue
 
         print('\n  [Enter] skip  |  e  edit  |  q  quit: ', end='')
         cmd = input().strip().lower()
