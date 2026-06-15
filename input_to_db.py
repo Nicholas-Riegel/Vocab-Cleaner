@@ -22,7 +22,27 @@ import time
 from datetime import datetime, timezone
 
 INPUT_FILE = 'input.tsv'
-DB_FILE    = 'vocab_master.db'
+DB_FILE    = '../../Vocab DB/vocab_master.db'
+FREQ_FILE  = 'frequency_list.tsv'
+
+
+def load_frequency_ranks() -> dict[str, int]:
+    """Load frequency_list.tsv and return a dict of lowercase lemma -> rank."""
+    ranks: dict[str, int] = {}
+    if not os.path.exists(FREQ_FILE):
+        return ranks
+    with open(FREQ_FILE, encoding='utf-8') as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith('rank'):
+                continue
+            parts = line.split('\t')
+            if len(parts) == 2:
+                try:
+                    ranks[parts[1].lower()] = int(parts[0])
+                except ValueError:
+                    pass
+    return ranks
 
 
 def now():
@@ -116,12 +136,12 @@ def update_translation(conn, base_word, article, english, notes):
     conn.commit()
 
 
-def insert_word(conn, word, article, english, word_type, plural, forms, notes, source, chapter):
+def insert_word(conn, word, article, english, word_type, plural, forms, notes, source, chapter, example='', level=None):
     ts = now()
     conn.execute(
-        '''INSERT INTO vocab (word, article, english, word_type, plural, forms, notes, source, chapter, created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-        (word, article, english, word_type, plural, forms, notes, source, chapter, ts, ts)
+        '''INSERT INTO vocab (word, article, english, word_type, plural, forms, notes, example, source, chapter, level, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+        (word, article, english, word_type, plural, forms, notes, example, source, chapter, level, ts, ts)
     )
     conn.commit()
 
@@ -171,11 +191,13 @@ def parse_entry(text):
     """
     provided_translation = None
     provided_notes = None
+    provided_example = None
     if '\t' in text:
-        parts = text.split('\t', 2)
+        parts = text.split('\t', 3)
         text = parts[0].strip()
         provided_translation = parts[1].strip() or None if len(parts) > 1 else None
-        provided_notes = parts[2].strip() or None if len(parts) > 2 else None
+        provided_example = parts[2].strip() or None if len(parts) > 2 else None
+        provided_notes = parts[3].strip() or None if len(parts) > 3 else None
 
     # Noun: line starts with a grammatical article
     for article in ('der', 'die', 'das'):
@@ -183,33 +205,33 @@ def parse_entry(text):
             rest = text[len(article) + 1:]
             if ', ' in rest:
                 noun, inline = rest.split(', ', 1)
-                return article, noun.strip(), inline.strip(), 'noun', provided_translation, provided_notes
-            return article, rest.strip(), '', 'noun', provided_translation, provided_notes
+                return article, noun.strip(), inline.strip(), 'noun', provided_translation, provided_example, provided_notes
+            return article, rest.strip(), '', 'noun', provided_translation, provided_example, provided_notes
 
     # Noun with parenthetical article: 'Deutschland (das)' — gender known but article not used in practice
     m = re.match(r'^(.+?)\s+\((der|die|das)\)$', text, re.IGNORECASE)
     if m:
         word_part = m.group(1).strip()
         paren_article = f'({m.group(2).lower()})'
-        return paren_article, word_part, '', 'noun', provided_translation, provided_notes
+        return paren_article, word_part, '', 'noun', provided_translation, provided_example, provided_notes
 
     # Verb with inline irregular forms: 'fahren, fuhr, gefahren'
     if ', ' in text:
         first = text.split(',')[0].strip()
         if ' ' not in first and re.search(r'(en|ern|ieren)$', first):
             parts = [p.strip() for p in text.split(', ')]
-            return None, parts[0], ', '.join(parts[1:]), 'verb', provided_translation, provided_notes
+            return None, parts[0], ', '.join(parts[1:]), 'verb', provided_translation, provided_example, provided_notes
 
     if text.startswith('sich '):
-        return None, text, '', 'verb', provided_translation, provided_notes
+        return None, text, '', 'verb', provided_translation, provided_example, provided_notes
     if ' ' in text:
-        return None, text, '', 'phrase', provided_translation, provided_notes
+        return None, text, '', 'phrase', provided_translation, provided_example, provided_notes
     if re.search(r'(en|eln|ern|ieren)$', text):
-        return None, text, '', 'verb', provided_translation, provided_notes
+        return None, text, '', 'verb', provided_translation, provided_example, provided_notes
     # Verbs ending in -n that don't match the pattern above (sein, tun)
     if text.lower() in ('sein', 'tun'):
-        return None, text, '', 'verb', provided_translation, provided_notes
-    return None, text, '', 'other', provided_translation, provided_notes
+        return None, text, '', 'verb', provided_translation, provided_example, provided_notes
+    return None, text, '', 'other', provided_translation, provided_example, provided_notes
 
 
 # ── Wiktionary lookups ─────────────────────────────────────────────────────────
@@ -318,10 +340,25 @@ def main():
 
     print(f"📚  {count_words(conn)} words currently in database\n")
 
-    source = 'Reading'
+    source_raw = input("Source (e.g. 'Deutsch Intensiv A1', 'Frequency List', 'Reading'): ").strip()
+    source = source_raw or 'Reading'
     print(f"📗  Source: {source}")
 
-    chapter_raw = input("Chapter number: ").strip()
+    # Derive level from source, or prompt
+    SOURCE_LEVEL_MAP = {
+        'Deutsch Intensiv A1': 'A1',
+        'Deutsch Intensiv A2': 'A2',
+        'Deutsch Intensiv B1': 'B1',
+        'Deutsch Intensiv B2': 'B2',
+        'C1': 'C1',
+    }
+    level = SOURCE_LEVEL_MAP.get(source)
+    if level is None:
+        level_raw = input("Level (A1/A2/B1/B2/C1, or leave blank): ").strip().upper()
+        level = level_raw if level_raw in ('A1', 'A2', 'B1', 'B2', 'C1') else None
+    print(f"📊  Level: {level or '(none)'}")
+
+    chapter_raw = input("Chapter number (0 for ungrouped): ").strip()
     try:
         chapter = int(chapter_raw)
     except ValueError:
@@ -348,7 +385,7 @@ def main():
         if not line:
             continue
 
-        article, word, inline_forms, word_type, provided_translation, provided_notes = parse_entry(line)
+        article, word, inline_forms, word_type, provided_translation, provided_example, provided_notes = parse_entry(line)
         display = f"{article} {word}" if article else word
 
         # ── Duplicate ──────────────────────────────────────────────────────────
@@ -397,7 +434,7 @@ def main():
             todos.append(display)
             print(f"  →  ⚠️  [TODO]")
 
-        insert_word(conn, word, article, english, word_type, plural, forms, notes, source, chapter)
+        insert_word(conn, word, article, english, word_type, plural, forms, notes, source, chapter, example=provided_example or '', level=level)
         added += 1
 
     conn.close()

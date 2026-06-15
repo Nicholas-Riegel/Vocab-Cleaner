@@ -8,7 +8,7 @@ Output:   output.txt  (tab-separated: Article / German / English)
 import os
 import sqlite3
 
-DB_FILE  = 'vocab_master.db'
+DB_FILE  = '../../Vocab DB/vocab_master.db'
 OUT_FILE = 'output.txt'
 
 

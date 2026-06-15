@@ -3,7 +3,7 @@
 ## Setup
 
 ```bash
-cd "/Users/nicholas/Deutsch/Vocab Cleaner"
+cd "/Users/nicholas/Deutsch/Vocab Tester/Vocab Cleaner"
 python3 -m venv vocab_env
 source vocab_env/bin/activate
 pip install httpx
@@ -54,6 +54,20 @@ Wie heißen Sie?	What is your name?
 
 ---
 
+### 2b. Ask Copilot to add example sentences
+
+Still in the same conversation (or a new one), ask Copilot to add a 4th tab-separated column with a natural example sentence for each word. Copilot should follow this checklist:
+
+**Example sentence checklist:**
+- One sentence per word, in natural everyday German
+- The sentence should clearly illustrate the most common meaning of the word
+- Sentences should be at an appropriate level — not too literary or obscure
+- Verbs should appear in a conjugated form (not just the infinitive)
+- Nouns should appear with their correct article
+- Output format: `German\tEnglish\texample sentence` (add as 4th column to existing lines)
+
+---
+
 ### 3. Run `input_to_db.py`
 
 ```bash
@@ -70,7 +84,7 @@ The script will:
 - Skip words already in the database (duplicates)
 - Merge new translation terms into the existing entry if a better translation is provided
 - Look up noun plurals and irregular verb forms via Wiktionary
-- Insert new words into `vocab_master.db`
+- Insert new words into `vocab_master.db` (located at `../Vocab DB/vocab_master.db`)
 - Print a summary of any `[TODO]` words that still need translations
 
 ---
@@ -107,10 +121,10 @@ You'll be prompted to select a source and chapter. Output: `output.txt` — colu
 
 | File | Purpose |
 |------|---------|
-| `input.txt` | Words to add — edit this before each run |
+| `input.tsv` | Words to add — edit this before each run |
 | `input_to_db.py` | Processes `input.txt` into the database |
 | `get_nouns.py` | Exports all nouns to `output.txt` |
-| `vocab_master.db` | The database — all vocabulary lives here |
+| `../Vocab DB/vocab_master.db` | The database — shared across projects, lives outside this folder |
 | `output.txt` | Tab-separated noun export for spreadsheets |
 
 **Importing into Google Sheets:**

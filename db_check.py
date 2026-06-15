@@ -16,7 +16,7 @@ import re
 import sqlite3
 import time
 
-DB_FILE = 'vocab_master.db'
+DB_FILE = '../../Vocab DB/vocab_master.db'
 
 
 # ── Wiktionary helpers ─────────────────────────────────────────────────────────
@@ -42,9 +42,10 @@ def get_wikitext(word):
             r.raise_for_status()
             data = r.json()
             return data.get('parse', {}).get('wikitext', {}).get('*', '')
-        except httpx.HTTPStatusError as e:
+        except httpx.HTTPError as e:
             if attempt == 0:
-                retry_after = int(e.response.headers.get('Retry-After', 10))
+                response = getattr(e, 'response', None)
+                retry_after = int(response.headers.get('Retry-After', 10) if response is not None else 10)
                 time.sleep(retry_after)
             else:
                 print(f' [error: {type(e).__name__}: {e}]', end='')
