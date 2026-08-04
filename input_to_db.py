@@ -22,7 +22,7 @@ import time
 from datetime import datetime, timezone
 
 INPUT_FILE = 'input.tsv'
-DB_FILE    = '../../Vocab DB/vocab_master.db'
+DB_FILE    = '../Vocab DB/vocab_master.db'
 FREQ_FILE  = 'frequency_list.tsv'
 
 
