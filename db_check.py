@@ -16,7 +16,7 @@ import re
 import sqlite3
 import time
 
-DB_FILE = '../Vocab DB/vocab_master.db'
+DB_FILE = os.path.expanduser('~/Dev/Projects/Deutsch/Vocab DB/vocab_master.db')
 
 
 # ── Wiktionary helpers ─────────────────────────────────────────────────────────

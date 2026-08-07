@@ -2,15 +2,28 @@
 """
 input_to_db.py — German Vocabulary → Database
 
-Reads input.txt and inserts words into vocab_master.db.
+Reads input.tsv and inserts words into vocab_master.db.
 
-Input file format (one entry per line, tab-separated):
-  aufwachsen\tto grow up, to be raised
-  die Stimmung, -en\tmood, atmosphere
-  schüchtern\tshy
+⚠️ IMPORTANT: This script does NOT fetch missing data from Wiktionary.
+All data must be complete in input.tsv BEFORE running this script:
+  - Nouns:  Must include article AND plural: das Bedürfnis, Bedürfnisse
+  - Verbs:  Must include conjugations: verwalten, verwaltete, verwaltet
+  - Others: Must include word_type in column 5: riesig\thuge\t\t\tadjective
 
-Lines without a tab-separated translation are inserted with [TODO].
-A summary of [TODO] entries is printed at the end of each run.
+Input file format (tab-separated):
+  German\tEnglish\tExample\tNotes\tword_type
+
+Examples:
+  das Bedürfnis, Bedürfnisse\tneed, requirement
+  verwalten, verwaltete, verwaltet\tto manage, to administer
+  riesig\thuge\t\t\tadjective
+
+Database column mapping:
+  - Column 1 → word, article, plural (nouns) or forms (verbs)
+  - Column 2 → english
+  - Column 3 → example
+  - Column 4 → notes
+  - Column 5 → word_type (optional, overrides auto-detection)
 
 Run with: python input_to_db.py
 """
@@ -22,7 +35,7 @@ import time
 from datetime import datetime, timezone
 
 INPUT_FILE = 'input.tsv'
-DB_FILE    = '../Vocab DB/vocab_master.db'
+DB_FILE    = os.path.expanduser('~/Dev/Projects/Deutsch/Vocab DB/vocab_master.db')
 FREQ_FILE  = 'frequency_list.tsv'
 
 
@@ -184,6 +197,9 @@ def parse_entry(text):
       'aufwachsen\tto grow up'              → (None, 'aufwachsen', '', 'verb', 'to grow up')
       'aufwachsen'                           → (None, 'aufwachsen', '', 'verb', None)
 
+    Optional 5th column can specify word_type explicitly to override pattern matching:
+      'umstrittenen\tcontested\t\tadjective\tadjective' → word='umstrittenen', word_type='adjective'
+
     Noun plural / verb forms can be included inline in the German part:
       'die Stimmung, -en'    → word='Stimmung', inline_forms='-en'
       'fahren, gefahren'     → word='fahren',   inline_forms='gefahren'
@@ -192,12 +208,14 @@ def parse_entry(text):
     provided_translation = None
     provided_notes = None
     provided_example = None
+    provided_word_type = None
     if '\t' in text:
-        parts = text.split('\t', 3)
+        parts = text.split('\t', 5)
         text = parts[0].strip()
         provided_translation = parts[1].strip() or None if len(parts) > 1 else None
         provided_example = parts[2].strip() or None if len(parts) > 2 else None
         provided_notes = parts[3].strip() or None if len(parts) > 3 else None
+        provided_word_type = parts[4].strip() or None if len(parts) > 4 else None
 
     # Noun: line starts with a grammatical article
     for article in ('der', 'die', 'das'):
@@ -205,33 +223,42 @@ def parse_entry(text):
             rest = text[len(article) + 1:]
             if ', ' in rest:
                 noun, inline = rest.split(', ', 1)
-                return article, noun.strip(), inline.strip(), 'noun', provided_translation, provided_example, provided_notes
-            return article, rest.strip(), '', 'noun', provided_translation, provided_example, provided_notes
+                wtype = provided_word_type or 'noun'
+                return article, noun.strip(), inline.strip(), wtype, provided_translation, provided_example, provided_notes
+            wtype = provided_word_type or 'noun'
+            return article, rest.strip(), '', wtype, provided_translation, provided_example, provided_notes
 
     # Noun with parenthetical article: 'Deutschland (das)' — gender known but article not used in practice
     m = re.match(r'^(.+?)\s+\((der|die|das)\)$', text, re.IGNORECASE)
     if m:
         word_part = m.group(1).strip()
         paren_article = f'({m.group(2).lower()})'
-        return paren_article, word_part, '', 'noun', provided_translation, provided_example, provided_notes
+        wtype = provided_word_type or 'noun'
+        return paren_article, word_part, '', wtype, provided_translation, provided_example, provided_notes
 
     # Verb with inline irregular forms: 'fahren, fuhr, gefahren'
     if ', ' in text:
         first = text.split(',')[0].strip()
         if ' ' not in first and re.search(r'(en|ern|ieren)$', first):
             parts = [p.strip() for p in text.split(', ')]
-            return None, parts[0], ', '.join(parts[1:]), 'verb', provided_translation, provided_example, provided_notes
+            wtype = provided_word_type or 'verb'
+            return None, parts[0], ', '.join(parts[1:]), wtype, provided_translation, provided_example, provided_notes
 
     if text.startswith('sich '):
-        return None, text, '', 'verb', provided_translation, provided_example, provided_notes
+        wtype = provided_word_type or 'verb'
+        return None, text, '', wtype, provided_translation, provided_example, provided_notes
     if ' ' in text:
-        return None, text, '', 'phrase', provided_translation, provided_example, provided_notes
+        wtype = provided_word_type or 'phrase'
+        return None, text, '', wtype, provided_translation, provided_example, provided_notes
     if re.search(r'(en|eln|ern|ieren)$', text):
-        return None, text, '', 'verb', provided_translation, provided_example, provided_notes
+        wtype = provided_word_type or 'verb'
+        return None, text, '', wtype, provided_translation, provided_example, provided_notes
     # Verbs ending in -n that don't match the pattern above (sein, tun)
     if text.lower() in ('sein', 'tun'):
-        return None, text, '', 'verb', provided_translation, provided_example, provided_notes
-    return None, text, '', 'other', provided_translation, provided_example, provided_notes
+        wtype = provided_word_type or 'verb'
+        return None, text, '', wtype, provided_translation, provided_example, provided_notes
+    wtype = provided_word_type or 'other'
+    return None, text, '', wtype, provided_translation, provided_example, provided_notes
 
 
 # ── Wiktionary lookups ─────────────────────────────────────────────────────────

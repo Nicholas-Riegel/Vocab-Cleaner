@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
 """
-assign_realms.py — Interactively assign realms to A1 words.
-
-Run with: python assign_realms.py
+assign_realms.py — Interactively assign realms (learning topics) to A1 words.
 
 This script will:
 1. Show all A1 words without a realm assigned
 2. Let you assign a realm to each word
 3. Save the changes to the database
+
+Run with: python assign_realms.py
 """
 
+import os
 import sqlite3
 from datetime import datetime, timezone
 
-DB_FILE = '../Vocab DB/vocab_master.db'
+DB_FILE = os.path.expanduser('~/Dev/Projects/Deutsch/Vocab DB/vocab_master.db')
 
 def now():
     return datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%S')
